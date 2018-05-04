@@ -1,4 +1,4 @@
-import AudioPlayer from './AudioPlayer';
+import AudioPlayer from './audio-player';
 
 export default class Sequence {
     constructor() {
