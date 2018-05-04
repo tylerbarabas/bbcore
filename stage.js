@@ -1,4 +1,4 @@
-import DomElement from './DomElement';
+import DomElement from './dom-element';
 
 export default class Stage extends DomElement {
     constructor(){
