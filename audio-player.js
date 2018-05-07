@@ -1,4 +1,4 @@
-import DomElement from './DomElement';
+import DomElement from './dom-element';
 
 window.AudioContext = window.AudioContext||window.webkitAudioContext;
 
