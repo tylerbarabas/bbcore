@@ -18,13 +18,22 @@ export default class SpriteSheet extends DomElement {
         this.spritesheet = new createjs.SpriteSheet(this.json);
         this.stage = new createjs.Stage(this.dom);
 
-        this.dom.height = this.json.frames.height || this.json.frames[0][3];
-        this.dom.width = this.json.frames.width || this.json.frames[0][2];
+        this.dom.height = this.json.frames.height || this.findFrameDimension(3);
+        this.dom.width = this.json.frames.width || this.findFrameDimension(2);
 
         createjs.Ticker.timingMode = createjs.Ticker.RAF;
         createjs.Ticker.addEventListener('tick', this.stage);
 
         this.appendTo();
+    }
+
+    findFrameDimension(o){
+        let highest = 0;
+        for (let i=0;i<this.json.frames.length;i++) {
+            let d = this.json.frames[i][o];
+            if (d > highest) highest = d;
+        }
+        return highest;
     }
 
     changeSprite(seq){
