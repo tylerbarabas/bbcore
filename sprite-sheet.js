@@ -1,5 +1,5 @@
 import 'latest-createjs';
-import DomElement from './DomElement';
+import DomElement from './dom-element';
 const createjs = window.createjs;
 
 export default class SpriteSheet extends DomElement {
