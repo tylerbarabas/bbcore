@@ -18,8 +18,8 @@ export default class SpriteSheet extends DomElement {
         this.spritesheet = new createjs.SpriteSheet(this.json);
         this.stage = new createjs.Stage(this.dom);
 
-        this.dom.height = this.json.frames.height || this.json.size.height;
-        this.dom.width = this.json.frames.width || this.json.size.width;
+        this.dom.height = this.json.frames.height || this.json.frames[0][6];
+        this.dom.width = this.json.frames.width || this.json.frames[0][5];
 
         createjs.Ticker.timingMode = createjs.Ticker.RAF;
         createjs.Ticker.addEventListener('tick', this.stage);

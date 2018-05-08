@@ -49,7 +49,7 @@ export default class DomElement {
     }
 
     appendTo( elem = window.stage || document.body ) {
-        if (typeof elem === 'object') {
+        if (elem !== document.body) {
             elem.dom.appendChild( this.dom );
         } else {
             elem.appendChild( this.dom );
