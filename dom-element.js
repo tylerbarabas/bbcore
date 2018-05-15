@@ -39,15 +39,15 @@ export default class DomElement {
     }
 
     flashyflash(){
-        this.style('filter', 'invert(100%');
+        this.style('filter', 'invert(100%)');
         var i = 0;
         let increment = 1;
         setInterval(()=>{
+            i += increment;
+            this.style('filter', 'invert('+i+'%)');
             if (i > 99 || i < 1) {
                 increment *= -1;
             }
-            i += increment;
-            this.style('filter', 'invert('+i+'%');
         },10);
     }
 
