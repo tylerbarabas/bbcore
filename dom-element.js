@@ -38,6 +38,19 @@ export default class DomElement {
         }
     }
 
+    flashyflash(){
+        this.style('filter', 'invert(100%');
+        var i = 0;
+        let increment = 1;
+        setInterval(()=>{
+            if (i > 99 || i < 1) {
+                increment *= -1;
+            }
+            i += increment;
+            this.style('filter', 'invert('+i+'%');
+        },10);
+    }
+
     style (attr,val) {
         if ( typeof attr === 'string' ) {
             this.dom.style[attr] = val;
