@@ -9,7 +9,7 @@ export default class SpriteSheet extends DomElement {
         this.json = null;
     }
 
-    init(){
+    init( append = true ){
         if (typeof this.json !== 'object') {
             console.error('Cannot init sprite sheet. No JSON present.');
             return;
@@ -24,7 +24,7 @@ export default class SpriteSheet extends DomElement {
         createjs.Ticker.timingMode = createjs.Ticker.RAF;
         createjs.Ticker.addEventListener('tick', this.stage);
 
-        this.appendTo();
+        if (append) this.appendTo();
     }
 
     findFrameDimension(o){
