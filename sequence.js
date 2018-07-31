@@ -18,6 +18,8 @@ export default class Sequence {
         this.ap = new AudioPlayer();
         this.ap.init();
 
+        this.masterController = window.masterController;
+
         this.init();
     }
 
