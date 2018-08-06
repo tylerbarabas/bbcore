@@ -84,4 +84,12 @@ export default class Stage extends DomElement {
     hideOverlay() {
         this.overlay.style.opacity = 0;
     }
+
+    clear() {
+        for (let i=0;i<this.dom.children.length;i++) {
+            let c = this.dom.children[i];
+            if (c.id !== 'overlay') this.dom.removeChild(c);
+        }
+        this.setBackdrop("");
+    }
 }

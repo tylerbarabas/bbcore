@@ -24,6 +24,11 @@ export default class MasterController extends DomElement {
     }
 
     next(){
-        console.log('next');
+        if (typeof this.sequences[this.currentSequence + 1] === 'undefined') {
+            throw 'Cannot find next song sequence.';
+        }
+        this.currentSequence += 1;
+        this.stage.clear();
+        new this.sequences[this.currentSequence];
     }
 }

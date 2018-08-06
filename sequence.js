@@ -15,7 +15,7 @@ export default class Sequence {
         this.time = {};
         this.songEvents = [];
 
-        this.ap = new AudioPlayer();
+        this.ap = window.AP || new AudioPlayer();
         this.ap.init();
 
         this.masterController = window.masterController;
