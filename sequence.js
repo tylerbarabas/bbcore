@@ -1,4 +1,5 @@
 import AudioPlayer from './audio-player';
+import Inspector from './inspector';
 
 export default class Sequence {
     constructor() {
@@ -11,11 +12,12 @@ export default class Sequence {
 
         this.loaded = false;
         this.playing = false;
+        this.debugMode = false;
 
         this.time = {};
         this.songEvents = [];
 
-        this.ap = window.AP || new AudioPlayer();
+        this.ap = new AudioPlayer();
         this.ap.init();
 
         this.masterController = window.masterController;
@@ -26,6 +28,10 @@ export default class Sequence {
     init() {
         this.ap.addEvent('song-loaded',this.onFileLoad.bind(this));
         this.ap.loadFile(this.audioPath);
+
+        if (this.debugMode) {
+            this.inspector = new Inspector(this);
+        }
     }
 
     onFileLoad(e) {
@@ -73,6 +79,8 @@ export default class Sequence {
         }
 
         this.position = this.getPosition();
+
+        this.inspector.updateTime(this.position);
 
         if (this.songEvents[0].pos <= this.position) {
             this.songEvents[0].func();
@@ -194,5 +202,9 @@ export default class Sequence {
 
     setPosition(pos) {
         this.ap.setPosition(pos);
+    }
+
+    destroy(){
+        this.ap.destroy();
     }
 }

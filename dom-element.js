@@ -4,17 +4,15 @@ export default class DomElement {
     }
 
     addEvent(evtName, func){
-        this.dom.addEventListener(evtName,func);
+        this.dom.addEventListener(evtName,func, false);
     }
 
     removeEvent(evtName, func){
         this.dom.removeEventListener(evtName,func);
     }
 
-    dispatchEvent(evtName, params){
-        var evt = document.createEvent('Event');
-        evt.initEvent(evtName,true,true);
-        evt.params = params;
+    dispatchEvent(evtName, params = {}){
+        var evt = new CustomEvent(evtName, params);
         this.dom.dispatchEvent(evt);
     }
 

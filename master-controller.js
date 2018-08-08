@@ -18,17 +18,22 @@ export default class MasterController extends DomElement {
     }
 
     init(){
-        this.currentSequence = 0;
+        this.currentIndex = 0;
         this.addEvent('next', this.next.bind(this));
-        new this.sequences[this.currentSequence]();
+        this.instantiateSequence();
     }
 
     next(){
-        if (typeof this.sequences[this.currentSequence + 1] === 'undefined') {
+        if (typeof this.sequences[this.currentIndex + 1] === 'undefined') {
             throw 'Cannot find next song sequence.';
         }
-        this.currentSequence += 1;
+        this.currentSequence.destroy();
+        this.currentIndex += 1;
         this.stage.clear();
-        new this.sequences[this.currentSequence];
+        this.instantiateSequence();
+    }
+
+    instantiateSequence(){
+        this.currentSequence = new this.sequences[this.currentIndex]();
     }
 }

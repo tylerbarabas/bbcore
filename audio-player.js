@@ -20,6 +20,7 @@ export default class AudioPlayer extends DomElement {
     }
 
     init() {
+        
         this.dom = document.createElement('AUDIO');
         this.dom.id = 'audio-player';
         document.body.appendChild(this.dom);
@@ -45,6 +46,7 @@ export default class AudioPlayer extends DomElement {
     pause(){
         this.playing = false;
         this.dom.pause();
+        this.dispatchEvent('pause');
     }
 
     stop(){
@@ -59,5 +61,11 @@ export default class AudioPlayer extends DomElement {
 
     setPosition(pos){
         this.dom.currentTime = pos;
+    }
+
+    destroy(){
+        this.dom.parentNode.removeChild(this.dom);
+        delete this;
+        delete window.AP;
     }
 }

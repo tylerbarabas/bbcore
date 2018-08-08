@@ -24,7 +24,22 @@ export default class SpriteSheet extends DomElement {
         createjs.Ticker.timingMode = createjs.Ticker.RAF;
         createjs.Ticker.addEventListener('tick', this.stage);
 
+        this.pause = this.pause.bind(this);
+        this.play = this.play.bind(this);
+
+        window.AP.addEvent('pause', this.pause);
+        window.AP.addEvent('play', this.play);
+
         if (append) this.appendTo();
+    }
+
+    pause(e){
+        if (!e.isTrusted) return; //Still not sure why this pause listener double fires
+        this.animation.stop();
+    }
+
+    play(e){
+        this.animation.play();
     }
 
     findFrameDimension(o){
