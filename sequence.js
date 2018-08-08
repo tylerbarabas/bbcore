@@ -73,16 +73,11 @@ export default class Sequence {
     }
 
     tick() {
-        if (this.songEvents.length === 0) {
-            this.stopTicker();
-            return;
-        }
-
         this.position = this.getPosition();
 
-        this.inspector.updateTime(this.position);
+        if (this.debugMode) this.inspector.updateTime(this.position);
 
-        if (this.songEvents[0].pos <= this.position) {
+        if (this.songEvents.length > 0 && this.songEvents[0].pos <= this.position) {
             this.songEvents[0].func();
             this.songEvents.shift();
         }
