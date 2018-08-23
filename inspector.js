@@ -8,23 +8,31 @@ export default class Inspector extends DomElement {
         super();
         this.sequence = sequence;
         this.dom.id = 'inspector';
-        this.dom.innerText = "0";
         this.style({
             position: 'absolute',
             top: 0,
             left: 0,
             width: '200px',
-            height: '30px',
+            height: '40px',
             backgroundColor: 'pink',
+            paddingLeft: '10px',
             zIndex: 9999
         });
         this.onClick = this.onClick.bind(this);
         this.addEvent('click', this.onClick);
+
+        this.timeElement = new DomElement();
+        this.timeElement.appendTo(this);
+
+        this.barBeatElement = new DomElement();
+        this.barBeatElement.appendTo(this);
+
         this.appendTo(document.body);
     }
 
     updateTime(time){
-        this.dom.innerText = time;
+        this.timeElement.dom.innerText = time;
+        this.barBeatElement.dom.innerText = `Bar: ${this.sequence.getBar(time)} Beat: ${this.sequence.getBeat(time)}`;
     }
 
     onClick(){

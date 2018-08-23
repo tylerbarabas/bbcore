@@ -14,6 +14,8 @@ export default class Sequence {
         this.playing = false;
         this.debugMode = false;
 
+        this.firstBeat = 0;
+
         this.time = {};
         this.songEvents = [];
 
@@ -58,6 +60,14 @@ export default class Sequence {
 
     getTime(bar, beat) {
         return parseInt(((bar-1) * this.time.bar) + ((beat-1) * this.time.beat));
+    }
+
+    getBar(time) {
+        return parseInt((time - this.firstBeat) / this.time.bar);
+    }
+
+    getBeat(time) {
+        return parseInt(((time - this.firstBeat) % this.time.bar) / this.time.quarterNote) + 1;
     }
 
     play() {
