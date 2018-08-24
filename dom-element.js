@@ -66,4 +66,9 @@ export default class DomElement {
             elem.appendChild( this.dom );
         }
     }
+
+    destroy(){
+        this.dom.parentNode.removeChild(this.dom);
+        delete this;
+    }
 }
