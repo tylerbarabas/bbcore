@@ -30,6 +30,8 @@ export default class Inspector extends DomElement {
         this.appendTo(document.body);
     }
 
+
+
     updateTime(time){
         this.timeElement.dom.innerText = time;
         this.barBeatElement.dom.innerText = `Bar: ${this.sequence.getBar(time)} Beat: ${this.sequence.getBeat(time)}`;

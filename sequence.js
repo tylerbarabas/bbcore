@@ -1,5 +1,6 @@
 import AudioPlayer from './audio-player';
 import Inspector from './inspector';
+import Stage from './stage';
 
 export default class Sequence {
     constructor() {
@@ -18,9 +19,18 @@ export default class Sequence {
 
         this.time = {};
         this.songEvents = [];
+        this.originalSongEvents = [];
 
         this.ap = new AudioPlayer();
         this.ap.init();
+
+        this.isLooper = false;
+        this.looper = {
+            beginning: 0,
+            end: 0
+        };
+
+        this.stage = new Stage();
 
         this.masterController = window.masterController;
 
@@ -38,7 +48,7 @@ export default class Sequence {
 
     onFileLoad(e) {
         this.loaded = true;
-        
+        this.looper.end = this.ap.dom.duration;
         if (this.bpm !== null && this.timeSignature !== null &&this.instructions !== null) { 
             this.calculateSubdivisions();
             this.registerSongEvents();
@@ -82,10 +92,23 @@ export default class Sequence {
         this.stopTicker();
     }
 
+    resetLooper(){
+        this.clearStage()
+        this.setPosition(this.looper.beginning)
+        this.songEvents = Array.from(this.originalSongEvents)
+    }
+
     tick() {
         this.position = this.getPosition();
 
-        if (this.debugMode) this.inspector.updateTime(this.position);
+        if (this.debugMode) {
+            if (this.isLooper) {
+                if (this.position > this.looper.end) {
+                    this.resetLooper()
+                }
+            }
+            this.inspector.updateTime(this.position);
+        }
 
         if (this.songEvents.length > 0 && this.songEvents[0].pos <= this.position) {
             this.songEvents[0].func();
@@ -128,6 +151,8 @@ export default class Sequence {
         this.songEvents.sort((x,y)=>{
             return x.pos - y.pos;
         });
+
+        this.originalSongEvents = Array.from(this.songEvents)
     }
 
     parseRhythm(funcName, originalPos, func, rhythm, repeat, adjustment) {
@@ -211,5 +236,9 @@ export default class Sequence {
 
     destroy(){
         this.ap.destroy();
+    }
+
+    clearStage(){
+        this.stage.clear()
     }
 }
