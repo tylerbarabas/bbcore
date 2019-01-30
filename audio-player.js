@@ -1,13 +1,11 @@
 import DomElement from './dom-element';
+import uuidv4 from 'uuid/v4'
 
 window.AudioContext = window.AudioContext||window.webkitAudioContext;
 
 export default class AudioPlayer extends DomElement {
 
     constructor(){
-        if (typeof window.AP !== 'undefined') {
-            throw 'Cannot instantiate another Audio Player.';
-        }
         super();
         this.loaded = false;
         this.playing = false;
@@ -16,13 +14,13 @@ export default class AudioPlayer extends DomElement {
             title: null
         };
         this.dom = null;
-        window.AP = this;
+        this.id = uuidv4();
     }
 
     init() {
         
         this.dom = document.createElement('AUDIO');
-        this.dom.id = 'audio-player';
+        this.dom.id = `ap-${this.id}`;
         document.body.appendChild(this.dom);
     }
 
@@ -66,6 +64,5 @@ export default class AudioPlayer extends DomElement {
     destroy(){
         this.dom.parentNode.removeChild(this.dom);
         delete this;
-        delete window.AP;
     }
 }
