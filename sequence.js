@@ -3,242 +3,242 @@ import Inspector from "./inspector"
 import Stage from "./stage"
 
 export default class Sequence {
-    constructor() {
-        this.title = null
-        this.audioPath = null
-        this.bpm = null
-        this.timeSignature = null
-        this.json = null
-        this.instructions = null
+  constructor() {
+    this.title = null
+    this.audioPath = null
+    this.bpm = null
+    this.timeSignature = null
+    this.json = null
+    this.instructions = null
 
-        this.loaded = false
-        this.playing = false
-        this.debugMode = false
+    this.loaded = false
+    this.playing = false
+    this.debugMode = false
 
-        this.firstBeat = 0
+    this.firstBeat = 0
 
-        this.time = {}
-        this.songEvents = []
-        this.originalSongEvents = []
+    this.time = {}
+    this.songEvents = []
+    this.originalSongEvents = []
 
-        this.ap = new AudioPlayer()
-        this.ap.init()
+    this.ap = new AudioPlayer()
+    this.ap.init()
 
-        this.isLooper = false
-        this.looper = {
-            beginning: 0,
-            end: 0
+    this.isLooper = false
+    this.looper = {
+      beginning: 0,
+      end: 0
+    }
+
+    this.stage = new Stage()
+
+    this.masterController = window.masterController
+
+    this.init()
+  }
+
+  init() {
+    this.ap.addEvent("song-loaded",this.onFileLoad.bind(this))
+    this.ap.loadFile(this.audioPath)
+
+    if (this.debugMode) {
+      this.inspector = new Inspector(this)
+    }
+  }
+
+  onFileLoad() {
+    this.loaded = true
+    this.looper.end = this.ap.dom.duration
+    if (this.bpm !== null && this.timeSignature !== null &&this.instructions !== null) { 
+      this.calculateSubdivisions()
+      this.registerSongEvents()
+    }
+  }
+
+  calculateSubdivisions() {
+    let bpms = (60/this.bpm)
+    this.time.quarterNote = this.time.beat = bpms
+    this.time.halfNote = this.time.quarterNote*2
+    this.time.wholeNote = this.time.halfNote*2
+    this.time.eighthNote = this.time.quarterNote/2
+    this.time.sixteenthNote = this.time.eighthNote/2
+    this.time.thirtySecondNote = this.time.sixteenthNote/2
+    this.time.eighthNoteTriplet = this.time.quarterNote/3
+    this.time.sixteenthNoteTriplet = this.time.eighthNoteTriplet/2
+    this.time.bar = parseInt(this.timeSignature.split("/")[0]) * this.time.quarterNote
+  }
+
+  getTime(bar, beat) {
+    return parseInt(((bar-1) * this.time.bar) + ((beat-1) * this.time.beat))
+  }
+
+  getBar(time) {
+    return parseInt((time - this.firstBeat) / this.time.bar)
+  }
+
+  getBeat(time) {
+    return parseInt(((time - this.firstBeat) % this.time.bar) / this.time.quarterNote) + 1
+  }
+
+  play() {
+    this.playing = true
+    this.ticker = setInterval(this.tick.bind(this),1)
+    this.ap.play(this.title)
+  }
+
+  pause() {
+    this.playing = false
+    this.ap.pause()
+    this.stopTicker()
+  }
+
+  resetLooper(){
+    this.clearStage()
+    this.setPosition(this.looper.beginning)
+    this.songEvents = Array.from(this.originalSongEvents)
+  }
+
+  tick() {
+    this.position = this.getPosition()
+
+    if (this.debugMode) {
+      if (this.isLooper) {
+        if (this.position > this.looper.end) {
+          this.resetLooper()
         }
-
-        this.stage = new Stage()
-
-        this.masterController = window.masterController
-
-        this.init()
+      }
+      this.inspector.updateTime(this.position)
     }
 
-    init() {
-        this.ap.addEvent("song-loaded",this.onFileLoad.bind(this))
-        this.ap.loadFile(this.audioPath)
+    if (this.songEvents.length > 0 && this.songEvents[0].pos <= this.position) {
+      this.songEvents[0].func()
+      this.songEvents.shift()
+    }
+  }
 
-        if (this.debugMode) {
-            this.inspector = new Inspector(this)
+  stopTicker() {
+    clearInterval(this.ticker)
+  }
+
+  addSongEvent( funcName, func, pos, rhythm, repeat, adjustment ) {
+    if (typeof rhythm === "object") {
+      this.parseRhythm(funcName, pos, func,rhythm,repeat,adjustment)
+      return
+    }
+
+    pos += adjustment
+    if (pos < 0) pos = 0
+    this.songEvents.push({funcName: funcName, pos: pos, func: func})
+  }
+
+  registerSongEvents() {
+    for (let i in this.instructions){
+      if (typeof this[this.instructions[i][0]] === "undefined") {
+        console.error("Function " + this.instructions[i][0] + " not found. Skipping...")
+        continue
+      }
+      let func = this[this.instructions[i][0]].bind(this),
+        funcName = this.instructions[i][0],
+        time = this.instructions[i][1],
+        rhythm = this.instructions[i][2] || false,
+        repeat = this.instructions[i][3] || 0,
+        adjustment = this.instructions[i][4] || 0
+      if (typeof time == "object") {
+        time = this.getTime(time.bar,time.beat)
+      }
+      this.addSongEvent(funcName,func,time,rhythm,repeat,adjustment)
+    }
+    this.songEvents.sort((x,y)=>{
+      return x.pos - y.pos
+    })
+
+    this.originalSongEvents = Array.from(this.songEvents)
+  }
+
+  parseRhythm(funcName, originalPos, func, rhythm, repeat, adjustment) {
+    let addTime = originalPos
+    if (repeat > 0) {
+      let entireRhythm = []
+      for (let i=0;i<=repeat;i++) {
+        for (let x=0;x<rhythm.length;x++){
+          entireRhythm.push(rhythm[x])
         }
+      }	
+      rhythm = entireRhythm
     }
-
-    onFileLoad() {
-        this.loaded = true
-        this.looper.end = this.ap.dom.duration
-        if (this.bpm !== null && this.timeSignature !== null &&this.instructions !== null) { 
-            this.calculateSubdivisions()
-            this.registerSongEvents()
-        }
-    }
-
-    calculateSubdivisions() {
-        let bpms = (60/this.bpm)
-        this.time.quarterNote = this.time.beat = bpms
-        this.time.halfNote = this.time.quarterNote*2
-        this.time.wholeNote = this.time.halfNote*2
-        this.time.eighthNote = this.time.quarterNote/2
-        this.time.sixteenthNote = this.time.eighthNote/2
-        this.time.thirtySecondNote = this.time.sixteenthNote/2
-        this.time.eighthNoteTriplet = this.time.quarterNote/3
-        this.time.sixteenthNoteTriplet = this.time.eighthNoteTriplet/2
-        this.time.bar = parseInt(this.timeSignature.split("/")[0]) * this.time.quarterNote
-    }
-
-    getTime(bar, beat) {
-        return parseInt(((bar-1) * this.time.bar) + ((beat-1) * this.time.beat))
-    }
-
-    getBar(time) {
-        return parseInt((time - this.firstBeat) / this.time.bar)
-    }
-
-    getBeat(time) {
-        return parseInt(((time - this.firstBeat) % this.time.bar) / this.time.quarterNote) + 1
-    }
-
-    play() {
-        this.playing = true
-        this.ticker = setInterval(this.tick.bind(this),1)
-        this.ap.play(this.title)
-    }
-
-    pause() {
-        this.playing = false
-        this.ap.pause()
-        this.stopTicker()
-    }
-
-    resetLooper(){
-        this.clearStage()
-        this.setPosition(this.looper.beginning)
-        this.songEvents = Array.from(this.originalSongEvents)
-    }
-
-    tick() {
-        this.position = this.getPosition()
-
-        if (this.debugMode) {
-            if (this.isLooper) {
-                if (this.position > this.looper.end) {
-                    this.resetLooper()
-                }
-            }
-            this.inspector.updateTime(this.position)
-        }
-
-        if (this.songEvents.length > 0 && this.songEvents[0].pos <= this.position) {
-            this.songEvents[0].func()
-            this.songEvents.shift()
-        }
-    }
-
-    stopTicker() {
-        clearInterval(this.ticker)
-    }
-
-    addSongEvent( funcName, func, pos, rhythm, repeat, adjustment ) {
-        if (typeof rhythm === "object") {
-            this.parseRhythm(funcName, pos, func,rhythm,repeat,adjustment)
-            return
-        }
-
-        pos += adjustment
-        if (pos < 0) pos = 0
-        this.songEvents.push({funcName: funcName, pos: pos, func: func})
-    }
-
-    registerSongEvents() {
-        for (let i in this.instructions){
-            if (typeof this[this.instructions[i][0]] === "undefined") {
-                console.error("Function " + this.instructions[i][0] + " not found. Skipping...")
-                continue
-            }
-            let func = this[this.instructions[i][0]].bind(this),
-                funcName = this.instructions[i][0],
-                time = this.instructions[i][1],
-                rhythm = this.instructions[i][2] || false,
-                repeat = this.instructions[i][3] || 0,
-                adjustment = this.instructions[i][4] || 0
-            if (typeof time == "object") {
-                time = this.getTime(time.bar,time.beat)
-            }
-            this.addSongEvent(funcName,func,time,rhythm,repeat,adjustment)
-        }
-        this.songEvents.sort((x,y)=>{
-            return x.pos - y.pos
-        })
-
-        this.originalSongEvents = Array.from(this.songEvents)
-    }
-
-    parseRhythm(funcName, originalPos, func, rhythm, repeat, adjustment) {
-        let addTime = originalPos
-        if (repeat > 0) {
-            let entireRhythm = []
-            for (let i=0;i<=repeat;i++) {
-                for (let x=0;x<rhythm.length;x++){
-                    entireRhythm.push(rhythm[x])
-                }
-            }	
-            rhythm = entireRhythm
-        }
-        if (typeof rhythm === "object") {
-            for (let i=0;i<rhythm.length;i++) {
-                this.addSongEvent(funcName,func,addTime,false,0,adjustment)
-                let current = rhythm[i].toLowerCase().split("")
-                for (let j=0;j<current.length;j++) {
-                    switch(current[j]) {
-                    case "b": addTime += this.time.bar
-                        break
-                    case "w": addTime += this.time.wholeNote
-                        break
-                    case "h": addTime += this.time.halfNote
-                        break
-                    case "q": addTime += this.time.quarterNote
-                        break
-                    case "e": addTime += this.time.eighthNote
-                        break
-                    case "s": addTime += this.time.sixteenthNote
-                        break
-                    case "t": addTime += this.time.thirtySecondNote
-                        break
-                    case "z": addTime += this.time.eighthNoteTriplet
-                        break
-                    case "x": addTime += this.time.sixteenthNoteTriplet
-                        break
-                    }
-                }
-            }
-        }
-    }
-
-    addTime(note) {
-        let value = 0
-        switch(note) {
-        case "b": value = this.time.bar
+    if (typeof rhythm === "object") {
+      for (let i=0;i<rhythm.length;i++) {
+        this.addSongEvent(funcName,func,addTime,false,0,adjustment)
+        let current = rhythm[i].toLowerCase().split("")
+        for (let j=0;j<current.length;j++) {
+          switch(current[j]) {
+          case "b": addTime += this.time.bar
             break
-        case "w": value = this.time.wholeNote
+          case "w": addTime += this.time.wholeNote
             break
-        case "h": value = this.time.halfNote
+          case "h": addTime += this.time.halfNote
             break
-        case "q": value = this.time.quarterNote
+          case "q": addTime += this.time.quarterNote
             break
-        case "e": value = this.time.eighthNote
+          case "e": addTime += this.time.eighthNote
             break
-        case "s": value = this.time.sixteenthNote
+          case "s": addTime += this.time.sixteenthNote
             break
-        case "t": value = this.time.thirtySecondNote
+          case "t": addTime += this.time.thirtySecondNote
             break
-        case "z": value = this.time.eighthNoteTriplet
+          case "z": addTime += this.time.eighthNoteTriplet
             break
-        case "x": value = this.time.sixteenthNoteTriplet
+          case "x": addTime += this.time.sixteenthNoteTriplet
             break
+          }
         }
-        return value
+      }
     }
+  }
 
-    stop() {
-        this.playing = false
-        this.ap.stop()
+  addTime(note) {
+    let value = 0
+    switch(note) {
+    case "b": value = this.time.bar
+      break
+    case "w": value = this.time.wholeNote
+      break
+    case "h": value = this.time.halfNote
+      break
+    case "q": value = this.time.quarterNote
+      break
+    case "e": value = this.time.eighthNote
+      break
+    case "s": value = this.time.sixteenthNote
+      break
+    case "t": value = this.time.thirtySecondNote
+      break
+    case "z": value = this.time.eighthNoteTriplet
+      break
+    case "x": value = this.time.sixteenthNoteTriplet
+      break
     }
+    return value
+  }
 
-    getPosition() {
-        return this.ap.getPosition()
-    }
+  stop() {
+    this.playing = false
+    this.ap.stop()
+  }
 
-    setPosition(pos) {
-        this.ap.setPosition(pos)
-    }
+  getPosition() {
+    return this.ap.getPosition()
+  }
 
-    destroy(){
-        this.ap.destroy()
-    }
+  setPosition(pos) {
+    this.ap.setPosition(pos)
+  }
 
-    clearStage(){
-        this.stage.clear()
-    }
+  destroy(){
+    this.ap.destroy()
+  }
+
+  clearStage(){
+    this.stage.clear()
+  }
 }

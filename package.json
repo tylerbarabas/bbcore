@@ -12,6 +12,6 @@
     "eslint": "^5.13.0"
   },
   "scripts":{
-    "lint": "./node_modules/.bin/eslint ."
+    "lint": "./node_modules/.bin/eslint . -c ./.eslintrc.json"
   }
 }
