@@ -1,39 +1,39 @@
-import DomElement from './dom-element';
-import Stage from './stage';
+import DomElement from "./dom-element"
+import Stage from "./stage"
 
 export default class MasterController extends DomElement {
     constructor(seq) {
-        super();
+        super()
         if (!Array.isArray(seq)){
-            throw 'Master controller needs an array of song sequences';
+            throw "Master controller needs an array of song sequences"
         }
 
-        this.stage = new Stage();
+        this.stage = new Stage()
 
-        window.masterController = this;
+        window.masterController = this
 
-        this.sequences = seq;
+        this.sequences = seq
 
-        this.init();
+        this.init()
     }
 
     init(){
-        this.currentIndex = 0;
-        this.addEvent('next', this.next.bind(this));
-        this.instantiateSequence();
+        this.currentIndex = 0
+        this.addEvent("next", this.next.bind(this))
+        this.instantiateSequence()
     }
 
     next(){
-        if (typeof this.sequences[this.currentIndex + 1] === 'undefined') {
-            throw 'Cannot find next song sequence.';
+        if (typeof this.sequences[this.currentIndex + 1] === "undefined") {
+            throw "Cannot find next song sequence."
         }
-        this.currentSequence.destroy();
-        this.currentIndex += 1;
-        this.stage.clear();
-        this.instantiateSequence();
+        this.currentSequence.destroy()
+        this.currentIndex += 1
+        this.stage.clear()
+        this.instantiateSequence()
     }
 
     instantiateSequence(){
-        this.currentSequence = new this.sequences[this.currentIndex]();
+        this.currentSequence = new this.sequences[this.currentIndex]()
     }
 }
